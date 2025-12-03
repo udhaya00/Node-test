@@ -1,0 +1,36 @@
+name: Build and Deploy Node app on self-hosted runner
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted   # matches the labels you set; at least "self-hosted" is required
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Show runner info
+      run: |
+        echo "Running on host:"
+        hostname
+        pwd
+        ls -la
+
+    - name: Build Docker image
+      run: |
+        docker build -t uv-node-app:latest .
+
+    - name: Stop old container (if any)
+      run: |
+        docker stop uv-node-container || true
+        docker rm uv-node-container || true
+
+    - name: Run new container
+      run: |
+        docker run -d -p 3000:3000 --name uv-node-container uv-node-app:latest
+
+    - name: Show running containers
+      run: docker ps
